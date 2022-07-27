@@ -3055,6 +3055,15 @@ const converters = {
             return {state: {'current_summation': value}};
         },
     },
+    develco_alarm_auto_cancel_delay: {
+        key: ['alarm_auto_cancel_delay'],
+        convertSet: async (entity, key, value, meta) => {
+            // When alarm is active: The time before the alarm is automatically cancelled. 0xFFF = no auto cancelling
+            const payload = {0x8004: {value: 0xFFF, type: 33}};
+            await entity.write('ssIasZone', payload, {manufacturerCode: 0x1015});
+            return {readAfterWriteTime: 200, state: {'sos': value}};
+        },
+    },
     ZMCSW032D_cover_position: {
         key: ['position', 'tilt'],
         convertSet: async (entity, key, value, meta) => {
