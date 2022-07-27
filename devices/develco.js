@@ -458,4 +458,32 @@ module.exports = [
             }
         },
     },
+    {
+        zigbeeModel: ['PBTZB-110'],
+        model: 'PBTZB-110',
+        vendor: 'Develco Products A/S',
+        description: 'Panic Button',
+        fromZigbee: [fz.ias_sos_alarm_2, fz.ias_wd, fz.develco_fw, fz.ias_enroll, fz.battery],
+        toZigbee: [tz.develco_alarm_auto_cancel_delay],
+        exposes: [e.sos()],
+        configure: async (device, coordinatorEndpoint, logger) => {
+            const endpoint = device.getEndpoint(35);
+            await reporting.bind(endpoint, coordinatorEndpoint, ['ssIasZone', 'genBasic', 'genPowerCfg']);
+            await endpoint.read('ssIasZone', ['iasCieAddr', 'zoneState', 'zoneId']);
+        },
+        endpoint: (device) => {
+            return {
+                default: 35
+            };
+        },
+        onEvent: async (type, data, device) => {
+            if (data.type === 'commandStatusChangeNotification' && data.cluster === 'ssIasZone') {
+                device.skipDefaultResponse = true;
+                await data.endpoint.defaultResponse(0, 0, 1280, data.meta.zclTransactionSequenceNumber, {
+                    "disableDefaultResponse": true,
+                    direction: 0
+                });
+            }
+        },
+    },
 ];
